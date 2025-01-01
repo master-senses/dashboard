@@ -4,8 +4,10 @@ import Link from 'next/link';
 import styles from './ui/home.module.css';
 import { lusitana } from './ui/fonts';
 import Image from 'next/image';
+// import { seed } from './seed/route';
 
-export default function Page() {
+export default async function Page() {
+  // await seed();
   return (
     <main className="flex min-h-screen flex-col p-6">
       <div className="flex h-20 shrink-0 items-end rounded-lg bg-blue-500 p-4 md:h-52">
