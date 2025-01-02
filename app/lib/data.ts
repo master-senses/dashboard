@@ -37,7 +37,7 @@ const supabase = createClient(
 export async function fetchRevenue() {
   try {
     // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const { data, error } = await supabase.from('revenue').select('*');
     if (error) throw error;
     // console.log(data);
@@ -143,28 +143,25 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable>`
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
-
-    return invoices.rows;
+    const { data, error } = await supabase
+      .from('invoices')
+      .select(`
+        id,
+        amount,
+        date,
+        status,
+        customers (
+          name,
+          email,
+          image_url
+        )
+      `)
+      .ilike('customers.name', `%${query}%`)
+      .or(`status.ilike.%${query}%`)
+      // .order('date', { ascending: false })
+      .range(offset, offset + ITEMS_PER_PAGE - 1);
+    // console.log(data[1].customers.name);
+    return data;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
